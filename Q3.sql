@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS `mydb`.`carga` (
   `peso` FLOAT NOT NULL,
   `sensivel` TINYINT NULL DEFAULT NULL,
   `perecivel` TINYINT NULL DEFAULT NULL,
-  `data_validade` VARCHAR(45) NULL DEFAULT NULL,
+  `data_validade` DATE NULL DEFAULT NULL,
   `temperatura_maxima` VARCHAR(45) NULL DEFAULT NULL,
   PRIMARY KEY (`numero`))
 ENGINE = InnoDB
@@ -69,26 +69,25 @@ DEFAULT CHARACTER SET = utf8;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `mydb`.`re_carga_agente` (
   `agente_idagente` INT NOT NULL,
-  `porto_nome` VARCHAR(45) NOT NULL,
+  `carga_numero` INT NOT NULL,
   INDEX `fk_re_carga_agente_agente1_idx` (`agente_idagente` ASC) VISIBLE,
-  INDEX `fk_re_carga_agente_porto1_idx` (`porto_nome` ASC) VISIBLE,
+  INDEX `fk_re_carga_agente_carga1_idx` (`carga_numero` ASC) VISIBLE,
   CONSTRAINT `fk_re_carga_agente_agente1`
     FOREIGN KEY (`agente_idagente`)
     REFERENCES `mydb`.`agente` (`id`),
-  CONSTRAINT `fk_re_carga_agente_porto1`
-    FOREIGN KEY (`porto_nome`)
-    REFERENCES `mydb`.`porto` (`nome`)
+  CONSTRAINT `fk_re_carga_agente_carga1`
+    FOREIGN KEY (`carga_numero`)
+    REFERENCES `mydb`.`carga` (`numero`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
 
-
 -- -----------------------------------------------------
 -- Table `mydb`.`re_carga_porto`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `mydb`.`re_carga_porto` (
-  `data_max_desembarque` VARCHAR(45) NOT NULL,
+  `data_max_desembarque` date NOT NULL,
   `porto_nome` VARCHAR(45) NOT NULL,
   `carga_numero` INT NOT NULL,
   INDEX `fk_re_carga_porto_porto1_idx` (`porto_nome` ASC) VISIBLE,
@@ -168,9 +167,9 @@ insert into agente (id, nome) values (2, "cleiton");
 insert into agente (id, nome) values (3, "claudio");
 
 insert into carga (numero, peso, sensivel, temperatura_maxima) values (1, 130, 1, 70); 
-insert into carga (numero, peso, perecivel, data_validade) values (123, 150, 1, "20/10/2030"); 
+insert into carga (numero, peso, perecivel, data_validade) values (123, 150, 1, "2020/09/20"); 
 insert into carga (numero, peso) values (2, 190); 
-insert into carga (numero, peso, perecivel, data_validade) values (3, 150, 1, "20/10/2010"); 
+insert into carga (numero, peso, perecivel, data_validade) values (3, 150, 1, "2030/09/10"); 
 
 
 insert into navio (nome, capacidade) values ("cargueiro", 100);
@@ -197,10 +196,10 @@ insert into re_carga_agente (carga_numero, agente_idagente) values (3,2);
 
 -- relações entre portos e cargas estabelecidas --
 
-insert into re_carga_porto (data_max_desembarque, porto_nome, carga_numero) values ("20/11/2020", "porto camboriu", 1);
-insert into re_carga_porto (data_max_desembarque, porto_nome, carga_numero) values ("20/12/2020", "porto itajai", 123);
-insert into re_carga_porto (data_max_desembarque, porto_nome, carga_numero) values ("10/11/2021", "porto floripa", 2);
-insert into re_carga_porto (data_max_desembarque, porto_nome, carga_numero) values ("12/11/2020", "porto floripa", 3);
+insert into re_carga_porto (data_max_desembarque, porto_nome, carga_numero) values ("2020/11/10", "porto camboriu", 1);
+insert into re_carga_porto (data_max_desembarque, porto_nome, carga_numero) values ("2020/09/10", "porto itajai", 123);
+insert into re_carga_porto (data_max_desembarque, porto_nome, carga_numero) values ("2021/09/10", "porto floripa", 2);
+insert into re_carga_porto (data_max_desembarque, porto_nome, carga_numero) values ("2019/09/10", "porto floripa", 3);
 
 -- relações entre portos e navios --
 insert into re_navio_porto (navio_nome, porto_nome) values ("cargueiro" , "porto camboriu");
@@ -215,5 +214,8 @@ select carga_numero, porto_nome, nc.navio_nome from re_navio_carga nc, re_navio_
 select numero, peso, data_validade from carga c where c.perecivel = 1;
 select numero, peso, temperatura_maxima from carga c where c.sensivel = 1;
 
--- selecionar carga perecivel com data de validade ultrapassada --
-select numero, data_validade from carga c where c.data_validade < "10/01/2020";
+-- selecionar carga perecivel com data de validade ultrapassada (alterar para datetime?) --
+select numero, data_validade from carga c where c.data_validade < current_date();
+
+-- selecionar cargas relacionadas com agentes com data de desembarque menor que a atual --
+select ca.carga_numero, cp.data_max_desembarque, ca.agente_idagente, cp.porto_nome from re_carga_agente ca, re_carga_porto cp where cp.data_max_desembarque < current_date() and ca.carga_numero = cp.carga_numero;

@@ -63,3 +63,8 @@ CREATE TABLE matriculas (
       ON DELETE NO ACTION
       ON UPDATE NO ACTION
 );
+
+TRUNCATE TABLE matriculas;
+DROP TABLE matriculas;
+TRUNCATE table alunos;
+DROP TABLE alunos;
